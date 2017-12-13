@@ -1,0 +1,24 @@
+diff --git a/cctools/configure b/cctools/configure
+index 060daca..f19a3a9 100755
+--- a/cctools/configure
++++ b/cctools/configure
+@@ -17620,13 +17620,15 @@ if test "x$LIBTAPI_DIR" != "xno"; then
+   test -d "$LIBTAPI_DIR/lib64" && LDFLAGS="$LDFLAGS -L$LIBTAPI_DIR/lib64"
+   test -d "$LIBTAPI_DIR/lib32" && LDFLAGS="$LDFLAGS -L$LIBTAPI_DIR/lib32"
+   if test "x$rpathlink" = "xyes"; then
+-    LIBTAPI_RPATH="-Wl,-rpath,$LIBTAPI_DIR/lib,--enable-new-dtags"
+-    LIBTAPI_RPATH="$LIBTAPI_RPATH -Wl,-rpath,$LIBTAPI_DIR/lib64,--enable-new-dtags"
+-    LIBTAPI_RPATH="$LIBTAPI_RPATH -Wl,-rpath,$LIBTAPI_DIR/lib32,--enable-new-dtags"
++    # dkimitsa: look for dlybs only at exe path
++    LIBTAPI_RPATH="-Wl,-rpath,'\$\$ORIGIN',--enable-new-dtags"
++#    LIBTAPI_RPATH="$LIBTAPI_RPATH -Wl,-rpath,$LIBTAPI_DIR/lib64,--enable-new-dtags"
++#    LIBTAPI_RPATH="$LIBTAPI_RPATH -Wl,-rpath,$LIBTAPI_DIR/lib32,--enable-new-dtags"
+     LDFLAGS="$LDFLAGS $LIBTAPI_RPATH"
+   fi
+   if test "x$isdarwin" = "xyes"; then
+-    LIBTAPI_RPATH="-Wl,-rpath,$LIBTAPI_DIR/lib"
++    # dkimitsa: look for dlybs only at exe path
++    LIBTAPI_RPATH="-Wl,-rpath,@executable_path"
+     LDFLAGS="$LDFLAGS $LIBTAPI_RPATH"
+   fi
+ fi

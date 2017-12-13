@@ -1,0 +1,40 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2284bb97..494aca95 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -12,7 +12,7 @@ project(xcbuild C CXX)
+ cmake_minimum_required(VERSION 3.0)
+ cmake_policy(SET CMP0054 NEW)
+ 
+-set(BUILD_SHARED_LIBS True CACHE BOOL "Build shared libraries." FORCE)
++set(BUILD_SHARED_LIBS False CACHE BOOL "Build shared libraries." FORCE)
+ 
+ # Platform options.
+ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+@@ -79,7 +79,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND "${CMAKE_CXX_COMPILER_VERS
+ endif ()
+ 
+ # Enable unit testing.
+-include(CTest)
++#include(CTest)
+ 
+ if (BUILD_TESTING)
+   add_subdirectory(ThirdParty/googletest/googletest)
+diff --git a/Libraries/xcassets/Headers/xcassets/Slot/SystemVersion.h b/Libraries/xcassets/Headers/xcassets/Slot/SystemVersion.h
+index e2678340..1f8b1d11 100644
+--- a/Libraries/xcassets/Headers/xcassets/Slot/SystemVersion.h
++++ b/Libraries/xcassets/Headers/xcassets/Slot/SystemVersion.h
+@@ -13,6 +13,13 @@
+ #include <ext/optional>
+ #include <string>
+ 
++#ifdef minor
++#undef minor
++#endif
++#ifdef major
++#undef major
++#endif
++
+ namespace xcassets {
+ namespace Slot {
+ 

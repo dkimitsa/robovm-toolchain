@@ -1,0 +1,63 @@
+diff --git a/build.sh b/build.sh
+index e957456..c73cb9f 100755
+--- a/build.sh
++++ b/build.sh
+@@ -31,6 +31,11 @@ elif [ "$TARGET" == "FreeBSD" ]; then
+   CMAKE_EXTRA_ARGS+="-DCMAKE_SYSTEM_NAME=FreeBSD "
+   export CC=amd64-pc-freebsd10.1-clang
+   export CXX=amd64-pc-freebsd10.1-clang++
++elif [ "$TARGET" == "Linux32" ]; then
++  export CFLAGS=-m32
++  export CXXFLAGS=-m32
++  export OBJCFLAGS=-m32
++  export LDFLAGS=-m32
+ elif [ "$TARGET" == "MINGW64" ]; then
+   CMAKE_EXTRA_ARGS+="-DCMAKE_SYSTEM_NAME=Windows "
+   export CC=x86_64-w64-mingw32-gcc
+@@ -41,15 +46,16 @@ elif [ "$TARGET" == "MINGW32" ]; then
+   export CXX=i686-w64-mingw32-g++
+ fi
+
+-if [ -n "$TARGET" -a "$PLATFORM" != "$TARGET" ]; then
+-  VERSION=$(cat ../VERSION.txt | grep llvm: | tr ' ' '\n' | tail -n1)
+-  CMAKE_EXTRA_ARGS+="-DLLVM_TABLEGEN=/opt/compiler/apple-llvm/$VERSION/bin/llvm-tblgen"
+-fi
++#if [ -n "$TARGET" -a "$PLATFORM" != "$TARGET" ]; then
++#  VERSION=$(cat ../VERSION.txt | grep llvm: | tr ' ' '\n' | tail -n1)
++#  CMAKE_EXTRA_ARGS+="-DLLVM_TABLEGEN=/opt/compiler/apple-llvm/$VERSION/bin/llvm-tblgen"
++#fi
+
+ cmake ../src/apple-llvm/src \
+  -DLLVM_INCLUDE_TESTS=OFF \
+  -DCMAKE_BUILD_TYPE=RELEASE \
+  -DCMAKE_INSTALL_PREFIX=$INSTALLPREFIX \
++ -DLLVM_TARGETS_TO_BUILD=ARM\;X86\;AArch64 -DLLVM_ENABLE_TERMINFO=OFF \
+  $CMAKE_EXTRA_ARGS
+ $MAKE libtapi -j $JOBS
+
+diff --git a/install.sh b/install.sh
+index 8eb78a5..a1ee6c5 100755
+--- a/install.sh
++++ b/install.sh
+@@ -12,7 +12,7 @@ INSTALLPREFIX=\
+
+ mkdir -p $INSTALLPREFIX
+ mkdir -p $INSTALLPREFIX/include
+-cp -rva ../src/apple-llvm/src/projects/libtapi/include/tapi $INSTALLPREFIX/include
++cp -va ../src/apple-llvm/src/projects/libtapi/include/tapi $INSTALLPREFIX/include
+ cp -va projects/libtapi/include/tapi/Version.inc $INSTALLPREFIX/include/tapi
+
+ $MAKE install-libtapi
+diff --git a/src/apple-llvm/src/cmake/modules/CrossCompile.cmake b/src/apple-llvm/src/cmake/modules/CrossCompile.cmake
+index c136dfa..8ac8b39 100644
+--- a/src/apple-llvm/src/cmake/modules/CrossCompile.cmake
++++ b/src/apple-llvm/src/cmake/modules/CrossCompile.cmake
+@@ -42,7 +42,7 @@ function(llvm_create_cross_target_internal target_name toochain buildtype)
+       set(build_type_flags "-DCMAKE_BUILD_TYPE=${buildtype}")
+     endif()
+     execute_process(COMMAND ${CMAKE_COMMAND} ${build_type_flags}
+-        -G "${CMAKE_GENERATOR}" -DLLVM_TARGETS_TO_BUILD=${LLVM_TARGETS_TO_BUILD}
++        -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -G "${CMAKE_GENERATOR}" -DLLVM_TARGETS_TO_BUILD=${LLVM_TARGETS_TO_BUILD}
+         ${CROSS_TOOLCHAIN_FLAGS_${target_name}} ${CMAKE_SOURCE_DIR}
+         -DLLVM_TARGET_IS_CROSSCOMPILE_HOST=TRUE
+       WORKING_DIRECTORY ${LLVM_${target_name}_BUILD} )

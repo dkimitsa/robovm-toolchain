@@ -1,0 +1,25 @@
+diff --git a/Libraries/libutil/Sources/DefaultFilesystem.cpp b/Libraries/libutil/Sources/DefaultFilesystem.cpp
+index f57ace99..9b634c71 100644
+--- a/Libraries/libutil/Sources/DefaultFilesystem.cpp
++++ b/Libraries/libutil/Sources/DefaultFilesystem.cpp
+@@ -504,8 +504,8 @@ read(std::vector<uint8_t> *contents, std::string const &path, size_t offset, ext
+     }
+ 
+     *contents = std::vector<uint8_t>(size);
+-
+-    if (!ReadFile(handle, contents->data(), size, nullptr, nullptr)) {
++    DWORD read;
++    if (!ReadFile(handle, contents->data(), size, &read, nullptr)) {
+         CloseHandle(handle);
+         return false;
+     }
+@@ -570,7 +570,8 @@ write(std::vector<uint8_t> const &contents, std::string const &path)
+         return false;
+     }
+ 
+-    if (!WriteFile(handle, contents.data(), contents.size(), nullptr, nullptr)) {
++    DWORD written;
++    if (!WriteFile(handle, contents.data(), contents.size(), &written, nullptr)) {
+         CloseHandle(handle);
+         return false;
+     }

@@ -1,0 +1,33 @@
+diff --git a/Libraries/libbom/Sources/bom_memory.c b/Libraries/libbom/Sources/bom_memory.c
+index bd8ea154..f4a6afe3 100755
+--- a/Libraries/libbom/Sources/bom_memory.c
++++ b/Libraries/libbom/Sources/bom_memory.c
+@@ -89,7 +89,7 @@ _bom_context_memory_mremap(struct bom_context_memory *memory, size_t size)
+     memory->size = size;
+ 
+     context->mapping = CreateFileMapping(context->handle, NULL, (context->writeable ? PAGE_READWRITE : PAGE_READONLY), 0, size, NULL);
+-    assert(context->mapping != INVALID_HANDLE_VALUE);
++    assert(context->mapping);
+ 
+     memory->data = (void *)MapViewOfFile(context->mapping, (context->writeable ? FILE_MAP_WRITE | FILE_MAP_READ : FILE_MAP_READ), 0, 0, 0);
+     assert(memory->data != NULL);
+@@ -156,6 +156,10 @@ bom_context_memory_file(const char *fn, bool writeable, size_t minimum_size)
+         return invalid;
+     }
+ 
++    // FIXME: this is a dirty workaround as CreateFileMapping on zero lengh
++    // file will cause 1006 error as specified in doc
++    if (!minimum_size)
++        minimum_size = 1;
+     if ((size_t)size < minimum_size) {
+         size = (DWORD)minimum_size;
+ 
+@@ -171,7 +175,7 @@ bom_context_memory_file(const char *fn, bool writeable, size_t minimum_size)
+     }
+ 
+     HANDLE mapping = CreateFileMapping(handle, NULL, (writeable ? PAGE_READWRITE : PAGE_READONLY), 0, size, NULL);
+-    if (mapping == INVALID_HANDLE_VALUE) {
++    if (mapping == NULL) {
+         CloseHandle(handle);
+         return invalid;
+     }
