@@ -5,7 +5,7 @@ SELF=$(basename $0)
 BASE=$(cd $(dirname $0); pwd -P)
 SUPORTED_TARGETS=("macosx-x86_64" "linux-x86_64" "linux-x86" "windows-x86_64" "windows-x86")
 DEFAULT_TARGETS=("linux-x86_64" "linux-x86" "windows-x86_64" "windows-x86")
-SUPORTED_TOOLS=("llvm" "libmd" "ld64" "llvm-dsym" "xcbuild" "file" "xib2nib" "deps")
+SUPORTED_TOOLS=("llvm" "libmd" "ld64" "llvm-dsym" "xcbuild" "file" "xib2nib" "deps" "xcode")
 
 
 function usage {
@@ -118,4 +118,10 @@ if arrayContainsElement "deps" "${TOOLS[@]}"; then
      cp -f /usr/i686-w64-mingw32/bin/libgcc_s_sjlj-1.dll "${BASE}/bin/windows-x86/"
      cp -f /usr/i686-w64-mingw32/bin/libstdc++-6.dll "${BASE}/bin/windows-x86/"
    fi
+fi
+
+if arrayContainsElement "xcode" "${TOOLS[@]}"; then
+   echo "Building iOS SDK files (xcode replacement)"
+   mkdir -p "${BASE}/bin/Xcode.app"
+   xcode/build.sh --clean --postclean "--install=${BASE}/bin/Xcode.app"
 fi

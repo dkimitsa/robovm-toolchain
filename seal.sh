@@ -3,9 +3,9 @@ set -e
 
 SELF=$(basename $0)
 BASE=$(cd $(dirname $0); pwd -P)
-SUPORTED_TARGETS=("macosxlinux-x86_64" "linux-x86_64" "linux-x86" "windows-x86_64" "windows-x86")
+SUPORTED_TARGETS=("darwinlinux-x86_64" "linux-x86_64" "linux-x86" "windows-x86_64" "windows-x86" "Xcode.app")
 DEFAULT_TARGETS=("linux-x86_64" "linux-x86" "windows-x86_64" "windows-x86")
-ZIP_TARGETS=("windows-x86_64" "windows-x86")
+ZIP_TARGETS=("windows-x86_64" "windows-x86" "Xcode.app")
 
 function usage {
   cat <<EOF
@@ -51,9 +51,16 @@ if [ ${#TARGETS[@]} -eq 0 ]; then
   TARGETS=(${DEFAULT_TARGETS[*]})
 fi
 
-version=`cat ${BASE}/version`
+version_toolchain=`cat ${BASE}/version.toolchain`
+version_xcode=`cat ${BASE}/version.xcode`
 
 for T in ${TARGETS[@]}; do
+    if [ $T == "darwinlinux-x86_64" ]; then
+        # make a copy from macosx-x86_64
+        rm -rf ${BASE}/bin/${T}
+        cp -R ${BASE}/bin/macosx-x86_64 ${BASE}/bin/${T}
+    fi
+
     if [ ! -d "${BASE}/bin/${T}" ]; then
        echo "No bin directory for target ${T}"
        exit 1
@@ -63,22 +70,30 @@ for T in ${TARGETS[@]}; do
     rm -f "${BASE}/bin/${T}/manifest"
     # get file list
 
-    # add version
-    echo "@version=$version" > "${BASE}/bin/${T}/manifest"
+    if [ $T == "Xcode.app" ]; then
+        # Xcode case -- no need to seal tonns of file there
+        # add version
+        version=$version_xcode
+        echo "@version=$version" > "${BASE}/bin/${T}/manifest"
+    else
+        # add version
+        version=$version_toolchain
+        echo "@version=$version" > "${BASE}/bin/${T}/manifest"
 
-    # seal all files
-    for f in ${BASE}/bin/${T}/*; do
-        name=`basename $f`
-        if [[ "$name" == "manifest" ]]; then
-           continue
-        fi
-        if [ -x "$(command -v md5sum)" ]; then
-            md5sum=($(md5sum $f))
-        else
-            md5sum=`md5 -q $f`
-        fi
-        echo "$name=$md5sum" >> "${BASE}/bin/${T}/manifest"
-    done
+        # seal all files
+        for f in ${BASE}/bin/${T}/*; do
+            name=`basename $f`
+            if [[ "$name" == "manifest" ]]; then
+               continue
+            fi
+            if [ -x "$(command -v md5sum)" ]; then
+                md5sum=($(md5sum $f))
+            else
+                md5sum=`md5 -q $f`
+            fi
+            echo "$name=$md5sum" >> "${BASE}/bin/${T}/manifest"
+        done
+    fi
 
     #pack
     if arrayContainsElement "$T" "${ZIP_TARGETS[@]}"; then
